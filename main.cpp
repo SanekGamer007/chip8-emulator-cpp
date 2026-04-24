@@ -10,7 +10,7 @@
 #define SCREEN_WIDTH  512
 #define SCREEN_HEIGHT 256
 
-bool unlocked_speed { true };
+bool unlocked_speed { false };
 
 uint16_t hz { 2000 };
 Chip8 emu {};
@@ -66,6 +66,7 @@ int main()
 
         check_input();
         update_timers(emu);
+        emu.vblank = true;
         if (not unlocked_speed) {
             for (int i = 0; i < instructions_per_frame; i++)
             {

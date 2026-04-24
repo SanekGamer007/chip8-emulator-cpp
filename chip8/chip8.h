@@ -4,9 +4,11 @@
 #include <array>
 
 struct Quirks {
-    bool emulate_old_shift { false };
+    bool emulate_old_shift { true };
     bool emulate_buggy_jump_offset { false };
-    bool emulate_old_load_store { false };
+    bool emulate_old_load_store { true };
+    bool emulate_vf_reset { true };
+    bool emulate_vblank_wait { true };
 };
 
 struct Chip8 {
@@ -40,6 +42,8 @@ struct Chip8 {
     uint8_t sound_timer { 0 };
     uint16_t pc { 0x200 };
     std::stack<uint16_t> pc_stack {};
+    int8_t waiting_key { -1 };
+    bool vblank { false };
     Quirks quirks {};
 };
 

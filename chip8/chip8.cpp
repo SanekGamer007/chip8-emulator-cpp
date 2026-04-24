@@ -95,13 +95,14 @@ void run(Chip8& chip8)
             break;
         }
         case 0xB: {
-            uint8_t address {};
+            uint16_t address {};
             if (chip8.quirks.emulate_buggy_jump_offset) {
                 address = nibble_nnn + chip8.v_registers[nibble_x];
             } else {
                 address = nibble_nnn + chip8.v_registers[0];
             }
             chip8.pc = address;
+            break;
         }
         case 0xC: {
             chip8.v_registers[nibble_x] = (rand() % 256) & nibble_nn;
@@ -112,7 +113,16 @@ void run(Chip8& chip8)
             break;
         }
         case 0xE: {
-            break; // TODO: Implement Input.
+            if (nibble_nn == 0x9E) {
+                if (chip8.input[chip8.v_registers[nibble_x]] == true) {
+                    chip8.pc += 2;
+                }
+            } else if (nibble_nn == 0xA1) {
+                if (chip8.input[chip8.v_registers[nibble_x]] == false) {
+                    chip8.pc += 2;
+                }
+            }
+            break;
         }
         case 0xF: {
             f_instructions(chip8, nibble_nn, nibble_x, nibble_y);
@@ -143,14 +153,23 @@ void math_instructions(Chip8& chip8, uint8_t n, uint8_t x, uint8_t y) {
         }
         case 0x1: {
             chip8.v_registers[x] = register_x | register_y;
+            if (chip8.quirks.emulate_vf_reset) {
+                chip8.v_registers[0xF] = 0;
+            }
             break;
         }
         case 0x2: {
             chip8.v_registers[x] = register_x & register_y;
+            if (chip8.quirks.emulate_vf_reset) {
+                chip8.v_registers[0xF] = 0;
+            }
             break;
         }
         case 0x3: {
             chip8.v_registers[x] = register_x ^ register_y;
+            if (chip8.quirks.emulate_vf_reset) {
+                chip8.v_registers[0xF] = 0;
+            }
             break;
         }
         case 0x4: {
@@ -174,15 +193,14 @@ void math_instructions(Chip8& chip8, uint8_t n, uint8_t x, uint8_t y) {
         }
         case 0x6: {
             if (chip8.quirks.emulate_old_shift) {
-                chip8.v_registers[x] = register_y;
+                chip8.v_registers[x] = register_y >> 1;
             } else {
                 chip8.v_registers[x] = register_x >> 1;
-            }
             chip8.v_registers[0xF] = register_x & 0x1;
+            }
             break;
         }
         case 0x7: {
-            chip8.v_registers[x] = register_y - register_x;
             if (register_x > register_y) {
                 chip8.v_registers[0xF] = 0;
             } else {
@@ -191,12 +209,12 @@ void math_instructions(Chip8& chip8, uint8_t n, uint8_t x, uint8_t y) {
             break;
         }
         case 0xE: {
+            chip8.v_registers[0xF] = (register_x & 0x80) >> 7;
             if (chip8.quirks.emulate_old_shift) {
-                chip8.v_registers[x] = register_y;
+                chip8.v_registers[x] = register_y << 1;
             } else {
                 chip8.v_registers[x] = register_x << 1;
             }
-            chip8.v_registers[0xF] = (register_x & 0x80) >> 7;
             break;
         }
         default: {
@@ -208,7 +226,21 @@ void math_instructions(Chip8& chip8, uint8_t n, uint8_t x, uint8_t y) {
 void f_instructions(Chip8& chip8, uint8_t nn, uint8_t x, uint8_t y) {
     switch (nn) {
         case 0x0A: {
-            break; // TODO: Input
+            chip8.pc -= 2;
+            if (chip8.waiting_key == -1) {
+                for (int i = 0; i < chip8.input.size(); i++) {
+                    if (chip8.input[i] == true) {
+                        chip8.waiting_key = i;
+                    }
+                }
+            } else {
+                if (!chip8.input[chip8.waiting_key]) {
+                    chip8.v_registers[x] = chip8.waiting_key;
+                    chip8.waiting_key = -1;
+                    chip8.pc += 2;
+                }
+            }
+            break;
         }
         case 0x07: {
             chip8.v_registers[x] = chip8.delay_timer;
@@ -261,6 +293,12 @@ void f_instructions(Chip8& chip8, uint8_t nn, uint8_t x, uint8_t y) {
 }
 
 void draw(Chip8& chip8, uint16_t x, uint16_t y, uint16_t height) {
+    if (chip8.quirks.emulate_vblank_wait) {
+        if (not chip8.vblank) {
+            chip8.pc -= 2;
+            return;
+        }
+    }
     x = x % 64;
     y = y % 32;
     chip8.v_registers[0xF] = 0;
@@ -283,6 +321,10 @@ void draw(Chip8& chip8, uint16_t x, uint16_t y, uint16_t height) {
             } else {
                 chip8.vram[cord_y * 64 + cord_x] = true;
             }
+            if (chip8.quirks.emulate_vblank_wait) {
+                chip8.vblank = false;
+            }
+
         }
     }
 }
