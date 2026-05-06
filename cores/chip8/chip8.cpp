@@ -1,7 +1,7 @@
 #include "chip8.h"
 #include <fstream>
 #include <random>
-
+// TODO: Implement 'random' random
 void Chip8::init() {
     ram.fill(0x00);
     vram.fill(false);
@@ -14,9 +14,7 @@ void Chip8::init() {
     height = 32;
     pc = 0x200;
     input.fill(false);
-    for (int i = 0; i < pc_stack.size(); i++) {
-        pc_stack.pop();
-    }
+    pc_stack = {};
     for (int i = 0; i < Chip8::FONT_DATA.size(); i++) {
         const int ram_idx {i + 0x50};
         ram[ram_idx] = Chip8::FONT_DATA[i];
@@ -25,6 +23,7 @@ void Chip8::init() {
 
 bool Chip8::load_rom(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) return false;
     std::streamsize size = file.tellg();
     if (size > (4096 - 0x200)) {
         return false;
@@ -329,7 +328,7 @@ void Chip8::draw(uint16_t x, uint16_t y, uint16_t h) {
                 continue;
             }
             const bool is_sprite_pixel_on { ( (byte >> (7 - i) ) & 1 ) != 0 };
-            const bool is_vram_pixel_on { vram[cord_y * width + cord_x] };
+            const bool is_vram_pixel_on { ( vram[cord_y * width + cord_x] != 0) };
             if (not is_sprite_pixel_on) {
                 continue;
             }
@@ -339,10 +338,9 @@ void Chip8::draw(uint16_t x, uint16_t y, uint16_t h) {
             } else {
                 vram[cord_y * width + cord_x] = true;
             }
-            if (quirks.emulate_vblank_wait) {
-                vblank = false;
-            }
-
         }
+    }
+    if (quirks.emulate_vblank_wait) {
+        vblank = false;
     }
 }

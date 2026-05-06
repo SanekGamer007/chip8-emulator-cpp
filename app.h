@@ -1,0 +1,22 @@
+#pragma once
+
+#include <raylib.h>
+#include "cores/chip8/chip8.h"
+#include "cores/schip/schip.h"
+
+struct App {
+    Chip8 emu {};
+
+    RenderTexture2D screen_tex = LoadRenderTexture(emu.get_width(), emu.get_height());
+    AudioStream audio_stream = LoadAudioStream(44100, 32, 1);
+
+    uint16_t hz = 2000;
+    bool unlocked_speed = false;
+
+    Color palette[4] { BLACK, WHITE, WHITE, WHITE };
+
+    void cleanup() const {
+        UnloadRenderTexture(screen_tex);
+        UnloadAudioStream(audio_stream);
+    }
+};

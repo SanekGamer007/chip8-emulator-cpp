@@ -1,6 +1,6 @@
 #pragma once
-#include "cores/chip8/chip8.h"
+#include "app.h"
 
 namespace UI {
-    void draw(Chip8 &emu, const uint64_t &hz);
+    void draw(App& app, const uint64_t &hz);
 }

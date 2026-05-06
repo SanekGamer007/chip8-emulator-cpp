@@ -20,7 +20,7 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
                     }
                 }
                 for (int dy = 0; dy <= n -1; dy++) {
-                    for (int dx = 0; dx < width - 1; dx++) {
+                    for (int dx = 0; dx < width /*- 1*/; dx++) {
                         int index {(dy * width) + dx};
                         vram[index] = false;
                     }
@@ -50,32 +50,29 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
                 Chip8::init();
                 return;
             } else if (nn == 0xFE) {
+                if (quirks.emulate_clear_on_mode_switch) {
+                    vram.fill(false);
+                }
                 width = 64;
                 height = 32;
-                if (quirks.emulate_clear_on_mode_switch) {
-                    vram.fill(false);
-                }
                 return;
             } else if (nn == 0xFF) {
-                width = 128;
-                height = 64;
                 if (quirks.emulate_clear_on_mode_switch) {
                     vram.fill(false);
                 }
+                width = 128;
+                height = 64;
                 return;
             }
             break;
         }
         case 0xF:
-            if (nn == 0x0030) {
+            if (nn == 0x30) {
                 i_register = 0xA0 + (10 * v_registers[x]);
                 return;
             } else if (nn == 0x75) {
-                uint8_t idx {7};
-                if (x > 7) {
-                    idx = x;
-                }
-                for (int i = 0; i <= idx; i++) {
+                uint8_t limit = std::min(static_cast<int>(x), 7);
+                for (int i = 0; i <= limit; i++) {
                     rpl[i] = v_registers[i];
                 }
                 return;
@@ -86,6 +83,7 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
                 }
                 return;
             }
+            break;
         default: {
             break;
         }
@@ -113,7 +111,7 @@ void SChip::draw(uint16_t x, uint16_t y, uint16_t h) {
                 continue;
             }
             const bool is_sprite_pixel_on { ( (sprite >> (15 - i) ) & 1 ) != 0 };
-            const bool is_vram_pixel_on { vram[cord_y * width + cord_x] };
+            const bool is_vram_pixel_on { ( vram[cord_y * width + cord_x] != 0) };
             if (not is_sprite_pixel_on) {
                 continue;
             }

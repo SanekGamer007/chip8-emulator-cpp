@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <stack>
 #include <array>
+#include <string>
 
 class Chip8 {
 
@@ -16,6 +17,9 @@ public:
     };
 
     bool vblank { false };
+    double audio_frequency = 480;
+    uint8_t delay_timer { 0 };
+    uint8_t sound_timer { 0 };
     std::array<bool, 16> input { };
     Quirks quirks {};
 
@@ -31,7 +35,7 @@ public:
     [[nodiscard]] uint16_t get_height() const {
         return height;
     }
-    [[nodiscard]] const std::array<bool, 128 * 64>& get_vram() const {
+    [[nodiscard]] const std::array<uint8_t, 128 * 64>& get_vram() const {
         return vram;
     }
 
@@ -56,14 +60,12 @@ protected:
     };
 
     std::array<uint8_t, 4096> ram { };
-    std::array<bool, 128 * 64> vram { };
+    std::array<uint8_t, 128 * 64> vram { };
     std::array<uint8_t, 16> v_registers { };
     uint16_t i_register { 0x0 };
     uint16_t pc { 0x200 };
     std::stack<uint16_t> pc_stack {};
     int8_t waiting_key { -1 };
-    uint8_t delay_timer { 0 };
-    uint8_t sound_timer { 0 };
     uint16_t width { 64 };
     uint16_t height { 32 };
 
