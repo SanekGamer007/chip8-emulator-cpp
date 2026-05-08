@@ -13,26 +13,19 @@
 
 constexpr int VIEWPORT_WIDTH = 512;
 constexpr int VIEWPORT_HEIGHT = 256;
+static const std::map<int, uint8_t> KEY_MAP = {
+    {KEY_ONE, 0x1}, {KEY_TWO, 0x2}, {KEY_THREE, 0x3}, {KEY_FOUR, 0xC},
+    {KEY_Q,   0x4}, {KEY_W,   0x5}, {KEY_E,     0x6}, {KEY_R,    0xD},
+    {KEY_A,   0x7}, {KEY_S,   0x8}, {KEY_D,     0x9}, {KEY_F,    0xE},
+    {KEY_Z,   0xA}, {KEY_X,   0x0}, {KEY_C,     0xB}, {KEY_V,    0xF}
+};
 
 #define AUDIO_BUFFER_SIZE 4096
 
 void check_input(Chip8& emu) {
-    emu.input[0x1] = IsKeyDown(KEY_ONE);
-    emu.input[0x2] = IsKeyDown(KEY_TWO);
-    emu.input[0x3] = IsKeyDown(KEY_THREE);
-    emu.input[0xC] = IsKeyDown(KEY_FOUR);
-    emu.input[0x4] = IsKeyDown(KEY_Q);
-    emu.input[0x5] = IsKeyDown(KEY_W);
-    emu.input[0x6] = IsKeyDown(KEY_E);
-    emu.input[0xD] = IsKeyDown(KEY_R);
-    emu.input[0x7] = IsKeyDown(KEY_A);
-    emu.input[0x8] = IsKeyDown(KEY_S);
-    emu.input[0x9] = IsKeyDown(KEY_D);
-    emu.input[0xE] = IsKeyDown(KEY_F);
-    emu.input[0xA] = IsKeyDown(KEY_Z);
-    emu.input[0x0] = IsKeyDown(KEY_X);
-    emu.input[0xB] = IsKeyDown(KEY_C);
-    emu.input[0xF] = IsKeyDown(KEY_V);
+    for (const auto& [key, chip8_key] : KEY_MAP ) {
+        emu.input[chip8_key] = IsKeyDown(key);
+    }
 }
 
 int main()
