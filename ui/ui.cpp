@@ -1,3 +1,6 @@
+#if defined(_WIN32)
+#include "external/fix_win32_compatibility.h"
+#endif
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
 #include <raygui.h>

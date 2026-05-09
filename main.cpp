@@ -66,16 +66,16 @@ int main()
             app.screen_tex = LoadRenderTexture(current_width, current_height);
         }
 
-        float scale_x = static_cast<float>(window_width) / static_cast<float>(current_width);
-        float scale_y = static_cast<float>(window_height - (UI_PADDING * 2) ) / static_cast<float>(current_height);
-        float scale = std::min(scale_x, scale_y);
+        const float scale_x = static_cast<float>(window_width) / static_cast<float>(current_width);
+        const float scale_y = static_cast<float>(window_height - (UI_PADDING * 2) ) / static_cast<float>(current_height);
+        const float scale = std::min(scale_x, scale_y);
 
-        float viewport_width = static_cast<float>(current_width) * scale;
-        float viewport_height = static_cast<float>(current_height) * scale;
+        const float viewport_width = static_cast<float>(current_width) * scale;
+        const float viewport_height = static_cast<float>(current_height) * scale;
 
         const Rectangle renderTextureDest = {
-            static_cast<float>(window_width - viewport_width)/ 2.0f,
-            static_cast<float>(window_height - viewport_height) / 2.0f,
+            (static_cast<float>( window_width) - viewport_width) / 2.0f,
+            (static_cast<float>( window_height) - viewport_height) / 2.0f,
             viewport_width, viewport_height
         };
         const Rectangle renderTextureSrc {

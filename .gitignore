@@ -1,6 +1,7 @@
 # CLion project files
 .idea
 cmake-build-*
-
+build/
+mingw-toolchain.cmake
 
 roms/

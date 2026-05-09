@@ -12,7 +12,14 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example games
 set(BUILD_RAYGUI_EXAMPLES OFF CACHE BOOL "" FORCE)
 #set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE) # enable wayland on linux
-set(PLATFORM "SDL" CACHE STRING "" FORCE)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(USE_EXTERNAL_GLFW OFF CACHE BOOL "" FORCE)
+    set(PLATFORM "Desktop" CACHE STRING "" FORCE)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(PLATFORM "SDL" CACHE STRING "" FORCE)
+endif()
+
 
 FetchContent_Declare(
         raylib
@@ -52,4 +59,7 @@ target_include_directories(Chip8Att2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_link_options(Chip8Att2 PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
 target_link_libraries(Chip8Att2 PRIVATE raylib raygui portable_file_dialogs)
