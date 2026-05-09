@@ -17,7 +17,7 @@ public:
     };
 
     bool vblank { false };
-    double audio_frequency = 480;
+    int audio_frequency = 480;
     uint8_t delay_timer { 0 };
     uint8_t sound_timer { 0 };
     std::array<bool, 16> input { };
@@ -38,6 +38,9 @@ public:
     [[nodiscard]] const std::array<uint8_t, 128 * 64>& get_vram() const {
         return vram;
     }
+
+    virtual ~Chip8() = default;
+
 
 protected:
     static constexpr std::array<uint8_t, 16 * 5> FONT_DATA = {

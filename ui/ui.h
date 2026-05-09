@@ -2,5 +2,19 @@
 #include "app.h"
 
 namespace UI {
-    void draw(App& app, const uint64_t &hz);
+    enum class Menu {
+        NONE,
+        FILE,
+        EMULATION,
+        SETTINGS,
+        ABOUT,
+    };
+
+    struct DropdownButton {
+        Menu id;
+        const char* text;
+        float width;
+    };
+
+    void draw(App& app, uint64_t hz);
 }

@@ -15,16 +15,16 @@ void Chip8::init() {
     pc = 0x200;
     input.fill(false);
     pc_stack = {};
-    for (int i = 0; i < Chip8::FONT_DATA.size(); i++) {
+    for (int i = 0; i < FONT_DATA.size(); i++) {
         const int ram_idx {i + 0x50};
-        ram[ram_idx] = Chip8::FONT_DATA[i];
+        ram[ram_idx] = FONT_DATA[i];
     }
 }
 
 bool Chip8::load_rom(const std::string& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file.is_open()) return false;
-    std::streamsize size = file.tellg();
+    const std::streamsize size = file.tellg();
     if (size > (4096 - 0x200)) {
         return false;
     }
@@ -247,7 +247,7 @@ void Chip8::f_instructions(uint8_t nn, uint8_t x, uint8_t y) {
             if (waiting_key == -1) {
                 for (int i = 0; i < input.size(); i++) {
                     if (input[i] == true) {
-                        waiting_key = i;
+                        waiting_key = static_cast<int8_t>(i);
                     }
                 }
             } else {

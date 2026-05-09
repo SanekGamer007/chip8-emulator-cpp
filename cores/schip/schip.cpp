@@ -1,10 +1,11 @@
 #include "schip.h"
 
 void SChip::init() {
+    rpl.fill(0);
     Chip8::init();
-    for (int i = 0; i < SChip::SUPER_FONT_DATA.size(); i++) {
+    for (int i = 0; i < SUPER_FONT_DATA.size(); i++) {
         const int ram_idx {i + 0xA0};
-        ram[ram_idx] = SChip::SUPER_FONT_DATA[i];
+        ram[ram_idx] = SUPER_FONT_DATA[i];
     }
 }
 
@@ -14,14 +15,14 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             if ((nn & 0xF0) == 0xC0) {
                 for (int dy = height - 1; dy >= n; dy--) {
                     for (int dx = 0; dx < width - 1; dx++) {
-                        int index {(dy * width) + dx};
-                        int next_index {((dy - n) * width) + dx};
+                        const int index {(dy * width) + dx};
+                        const int next_index {((dy - n) * width) + dx};
                         vram[index] = vram[next_index];
                     }
                 }
                 for (int dy = 0; dy <= n -1; dy++) {
                     for (int dx = 0; dx < width /*- 1*/; dx++) {
-                        int index {(dy * width) + dx};
+                        const int index {(dy * width) + dx};
                         vram[index] = false;
                     }
                 }
@@ -29,8 +30,8 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             } else if (nn == 0xFB) {
                 for (int dy = 0; dy < height; dy++) {
                     for (int dx = width - 1; dx >= 4; dx--) {
-                        int index {(dy * width) + dx};
-                        int next_index {(dy * width) + (dx - 4)};
+                        const int index {(dy * width) + dx};
+                        const int next_index {(dy * width) + (dx - 4)};
                         vram[index] = vram[next_index];
                         vram[next_index] = false;
                     }
@@ -39,15 +40,15 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             } else if (nn == 0xFC) {
                 for (int dy = 0; dy < height; dy++) {
                     for (int dx = 0; dx < width - 5; dx++) {
-                        int index {(dy * width) + dx};
-                        int next_index {(dy * width) + (dx + 4)};
+                        const int index {(dy * width) + dx};
+                        const int next_index {(dy * width) + (dx + 4)};
                         vram[index] = vram[next_index];
                         vram[next_index] = false;
                     }
                 }
                 return;
             } else if (nn == 0xFD) {
-                Chip8::init();
+                SChip::init();
                 return;
             } else if (nn == 0xFE) {
                 if (quirks.emulate_clear_on_mode_switch) {
@@ -71,13 +72,13 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
                 i_register = 0xA0 + (10 * v_registers[x]);
                 return;
             } else if (nn == 0x75) {
-                uint8_t limit = std::min(static_cast<int>(x), 7);
+                const uint8_t limit = std::min(static_cast<int>(x), 7);
                 for (int i = 0; i <= limit; i++) {
                     rpl[i] = v_registers[i];
                 }
                 return;
             } else if (nn == 0x85) {
-                uint8_t limit = std::min(static_cast<int>(x), 7);
+                const uint8_t limit = std::min(static_cast<int>(x), 7);
                 for (int i = 0; i <= limit; i++) {
                     v_registers[i] = rpl[i];
                 }
@@ -121,10 +122,9 @@ void SChip::draw(uint16_t x, uint16_t y, uint16_t h) {
             } else {
                 vram[cord_y * width + cord_x] = true;
             }
-            if (quirks.emulate_vblank_wait) {
-                vblank = false;
-            }
-
         }
+    }
+    if (quirks.emulate_vblank_wait) {
+        vblank = false;
     }
 }
