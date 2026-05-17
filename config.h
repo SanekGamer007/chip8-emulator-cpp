@@ -1,5 +1,6 @@
 #pragma once
 
-inline int window_width = 512;
-inline int window_height = 288;
-constexpr int UI_PADDING = 16;
+inline float window_width = 512.0f;
+inline float window_height = 288.0f;
+inline int max_fps = 0;
+inline bool vsync = false;

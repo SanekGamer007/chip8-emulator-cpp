@@ -8,6 +8,7 @@
 #include "config.h"
 
 constexpr double TIMER_RATE = 1.0 / 60.0;
+
 static const std::map<int, uint8_t> KEY_MAP = {
     {KEY_ONE, 0x1}, {KEY_TWO, 0x2}, {KEY_THREE, 0x3}, {KEY_FOUR, 0xC},
     {KEY_Q,   0x4}, {KEY_W,   0x5}, {KEY_E,     0x6}, {KEY_R,    0xD},
@@ -26,7 +27,8 @@ void check_input(Chip8& emu) {
 int main()
 {
     int last_display_hz = -1;
-    InitWindow(window_width, window_height, "Hello Raylib");
+    InitWindow(window_width, window_height, "Chip++");
+    SetWindowIcon(UI::logo_img);
     SetWindowState(FLAG_VSYNC_HINT);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     double timer_accumulator = 0.0;
@@ -39,35 +41,49 @@ int main()
     int sineIndex = 0;
     PlayAudioStream(app.audio_stream);
 
-    app.emu.init();
+    app.emu->init();
 
 
-    uint16_t current_width = app.emu.get_width();
-    uint16_t current_height = app.emu.get_height();
+    uint16_t current_width = app.emu->get_width();
+    uint16_t current_height = app.emu->get_height();
+
+    if (max_fps == 0) {
+        max_fps = GetMonitorRefreshRate(GetCurrentMonitor());
+    }
+    UI::init(app);
 
     while (!WindowShouldClose())
     {
         const double frame_start_time = GetTime();
-        const int current_monitor = GetCurrentMonitor();
-        const int display_hz = std::max(1, GetMonitorRefreshRate(current_monitor));
+        if (vsync) {
+            if (not IsWindowState(FLAG_VSYNC_HINT)) {
+                SetWindowState(FLAG_VSYNC_HINT);
+            }
+            const int current_monitor = GetCurrentMonitor();
+            max_fps = std::max(1, GetMonitorRefreshRate(current_monitor));
+        } else {
+            if (IsWindowState(FLAG_VSYNC_HINT)) {
+                ClearWindowState(FLAG_VSYNC_HINT);
+            }
+        }
         timer_accumulator += GetFrameTime();
         window_width = GetScreenWidth();
         window_height = GetScreenHeight();
 
-        if (display_hz != last_display_hz) {
-            SetTargetFPS(display_hz);
-            last_display_hz = display_hz;
+        if (max_fps != last_display_hz) {
+            SetTargetFPS(max_fps);
+            last_display_hz = max_fps;
         }
 
-        if (app.emu.get_width() != current_width || app.emu.get_height() != current_height) {
+        if (app.emu->get_width() != current_width || app.emu->get_height() != current_height) {
             UnloadRenderTexture(app.screen_tex);
-            current_width = app.emu.get_width();
-            current_height = app.emu.get_height();
+            current_width = app.emu->get_width();
+            current_height = app.emu->get_height();
             app.screen_tex = LoadRenderTexture(current_width, current_height);
         }
 
         const float scale_x = static_cast<float>(window_width) / static_cast<float>(current_width);
-        const float scale_y = static_cast<float>(window_height - (UI_PADDING * 2) ) / static_cast<float>(current_height);
+        const float scale_y = static_cast<float>(window_height - (UI::UI_VERT_PADDING * 2) ) / static_cast<float>(current_height);
         const float scale = std::min(scale_x, scale_y);
 
         const float viewport_width = static_cast<float>(current_width) * scale;
@@ -86,35 +102,37 @@ int main()
         };
         constexpr Vector2 renderTextureOrig = {0};
 
-        uint16_t instructions_per_frame { static_cast<uint16_t>( app.hz / display_hz ) };
+        uint16_t instructions_per_frame { static_cast<uint16_t>( app.hz / max_fps ) };
         uint64_t instructions_this_frame { 0 };
 
         if (app.ready and !app.paused) {
-            check_input(app.emu);
+            if (not UI::ui_focus) {
+                check_input(*app.emu);
+            }
             if (timer_accumulator >= TIMER_RATE) {
-                app.emu.update_timers();
+                app.emu->update_timers();
                 timer_accumulator = 0.0;
             }
-            app.emu.vblank = true;
+            app.emu->vblank = true;
             if (not app.unlocked_speed) {
                 for (int i = 0; i < instructions_per_frame; i++)
                 {
-                    app.emu.run();
+                    app.emu->run();
                     instructions_this_frame++;
                 };
             } else {
-                while ( (GetTime() - frame_start_time) < (1.0 / display_hz) ) {
-                    app.emu.run();
+                while ( (GetTime() - frame_start_time) < (1.0 / max_fps) ) {
+                    app.emu->run();
                     instructions_this_frame++;
                 }
             }
-            if (app.emu.sound_timer != 0) {
+            if (app.emu->sound_timer != 0) {
                 if (!IsAudioStreamPlaying(app.audio_stream))
                     ResumeAudioStream(app.audio_stream);
 
                 if (IsAudioStreamProcessed(app.audio_stream)) { // ty raylib raw audio example
                     for (float & i : buffer) {
-                        int wavelength = 44100/app.emu.audio_frequency;
+                        int wavelength = 44100/app.emu->audio_frequency;
                         i = std::sin(2.0*PI*sineIndex/wavelength)>=0.0 ? 1.0:-1.0; // thanks google
                         sineIndex++;
                         if (sineIndex >= wavelength)
@@ -135,7 +153,7 @@ int main()
             ClearBackground(app.palette[0]);
             for (int y = 0; y < current_height; y++) {
                 for (int x = 0; x < current_width; x++) {
-                    if (app.emu.get_vram()[y * current_width + x]) {
+                    if (app.emu->get_vram()[y * current_width + x]) {
                         DrawPixel(x, y, app.palette[1]);
                     };
                 };
@@ -144,7 +162,7 @@ int main()
 
         BeginDrawing();
             ClearBackground(app.palette[0]);
-            const uint64_t hz_per_second { instructions_this_frame * display_hz};
+            const uint64_t hz_per_second { instructions_this_frame * max_fps};
             DrawTexturePro(app.screen_tex.texture,
                 renderTextureSrc,
                 renderTextureDest,

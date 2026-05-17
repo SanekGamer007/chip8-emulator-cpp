@@ -1,8 +1,8 @@
 #include "chip8.h"
 #include <fstream>
-#include <random>
-// TODO: Implement 'random' random
+
 void Chip8::init() {
+    rng.seed(std::random_device{}());
     ram.fill(0x00);
     vram.fill(false);
     v_registers.fill(0x00);
@@ -52,8 +52,8 @@ void Chip8::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             if (nn == 0xE0) {
                 vram.fill(false);
             } else if (nn == 0xEE) {
-                pc = pc_stack.top();
-                pc_stack.pop();
+                pc = pc_stack[pc_stack_pointer - 1];
+                pc_stack_pointer -= 1;
             }
             break;
         }
@@ -62,7 +62,8 @@ void Chip8::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             break;
         }
         case 0x2: {
-            pc_stack.push(pc);
+            pc_stack[pc_stack_pointer] = pc;
+            pc_stack_pointer += 1;
             pc = nnn;
             break;
         }
@@ -117,7 +118,7 @@ void Chip8::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
             break;
         }
         case 0xC: {
-            v_registers[x] = (rand() % 256) & nn;
+            v_registers[x] = dist(rng) & nn;
             break;
         }
         case 0xD: {

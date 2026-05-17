@@ -11,13 +11,12 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example games
 set(BUILD_RAYGUI_EXAMPLES OFF CACHE BOOL "" FORCE)
-#set(GLFW_BUILD_WAYLAND ON CACHE BOOL "" FORCE) # enable wayland on linux
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(USE_EXTERNAL_GLFW OFF CACHE BOOL "" FORCE)
     set(PLATFORM "Desktop" CACHE STRING "" FORCE)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(PLATFORM "SDL" CACHE STRING "" FORCE)
+    set(PLATFORM "SDL" CACHE STRING "" FORCE) # wayland spam fix
 endif()
 
 

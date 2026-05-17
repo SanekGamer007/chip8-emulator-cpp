@@ -1,7 +1,6 @@
 #include "schip.h"
 
 void SChip::init() {
-    rpl.fill(0);
     Chip8::init();
     for (int i = 0; i < SUPER_FONT_DATA.size(); i++) {
         const int ram_idx {i + 0xA0};
@@ -39,7 +38,7 @@ void SChip::execute_instruction(uint8_t instruction, uint8_t x, uint8_t y, uint8
                 return;
             } else if (nn == 0xFC) {
                 for (int dy = 0; dy < height; dy++) {
-                    for (int dx = 0; dx < width - 5; dx++) {
+                    for (int dx = 0; dx < width - 4; dx++) {
                         const int index {(dy * width) + dx};
                         const int next_index {(dy * width) + (dx + 4)};
                         vram[index] = vram[next_index];

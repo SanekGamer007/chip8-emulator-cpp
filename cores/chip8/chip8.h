@@ -3,6 +3,7 @@
 #include <stack>
 #include <array>
 #include <string>
+#include <random>
 
 class Chip8 {
 
@@ -22,6 +23,8 @@ public:
     uint8_t sound_timer { 0 };
     std::array<bool, 16> input { };
     Quirks quirks {};
+    std::mt19937 rng;
+    std::uniform_int_distribution<uint16_t> dist{0, 255};
 
     bool load_rom(const std::string& path);
     virtual void init();
@@ -67,7 +70,8 @@ protected:
     std::array<uint8_t, 16> v_registers { };
     uint16_t i_register { 0x0 };
     uint16_t pc { 0x200 };
-    std::stack<uint16_t> pc_stack {};
+    std::array<uint16_t, 255> pc_stack {};
+    uint8_t pc_stack_pointer { 0 };
     int8_t waiting_key { -1 };
     uint16_t width { 64 };
     uint16_t height { 32 };
